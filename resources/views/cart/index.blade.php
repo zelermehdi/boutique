@@ -1,4 +1,10 @@
 @extends('layouts.master')
+@section('extra-meta')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
+
+
 
 @section('content')
 
@@ -44,8 +50,17 @@
                         </div>
                       </div>
                     </th>
-                    <td class="border-0 align-middle"><strong>{{$product->model->getPrice()}}</strong></td>
-                    <td class="border-0 align-middle"><strong>1</strong></td>
+                    <td class="border-0 align-middle"><strong>{{getPrice($product->subtotal())}}</strong></td>
+                    <td class="border-0 align-middle">
+                      <select name="qty" id="qty" data-id="{{$product->rowId}}" class="custom-select">
+                      @for($i=1;$i<6;$i++)
+
+                      <option value="{{$i}}"{{ $i == $product->qty ? 'selected' : '' }}>
+                        {{ $i }}
+                    </option>
+                      @endfor
+                      </select>
+                    </td>
                     <td class="border-0 align-middle">
                         <form action="{{route('cart.destroy', $product->rowId)}}" method="POST">
                                 @csrf
@@ -114,4 +129,46 @@
 
 
 
+@endsection
+
+@section('extra-js')
+
+<script>
+  var selects = document.querySelectorAll('#qty');
+  Array.from(selects).forEach((element) => {
+    console.log(element);
+    element.addEventListener('change', function () {
+      var rowId = this.getAttribute('data-id'); // Correction de "getAttribue" à "getAttribute"
+      var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  
+      fetch(
+        `/panier/${rowId}`, // Utilisation de l'interpolation de chaîne pour inclure la valeur de rowId
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text-plain, */*",
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRF-TOKEN": token
+          },
+          method: 'PATCH', // Correction de "patch" à "PATCH"
+          body: JSON.stringify({
+            qty: this.value
+          })
+        }
+      )
+        .then((response) => {
+          console.log(response);
+          if (response.ok) {
+            location.reload();
+          } else {
+            console.error('Une erreur s\'est produite lors de la requête.');
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+  });
+  </script>
+  
 @endsection

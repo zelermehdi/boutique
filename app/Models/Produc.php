@@ -15,4 +15,11 @@ class Produc extends Model
         return number_format( $price,2,","," "). '€';
     }
     use HasFactory;
+
+
+    public function categories(){
+        return $this->belongsToMany(Category::class);
+    }
+
+
 }
